@@ -1,62 +1,69 @@
-![](.gitbook/assets/logo.png)
+# KubeArmor: Runtime Security
+by gmstcl : sgh | on 3 Feb 2025 | in Amazon Elastic Kubernetes Service , CNCF KubeArmor
 
-[![Build Status](https://github.com/kubearmor/KubeArmor/actions/workflows/ci-go.yml/badge.svg)](https://github.com/kubearmor/KubeArmor/actions/workflows/ci-go.yml/)
-[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/5401/badge)](https://bestpractices.coreinfrastructure.org/projects/5401)
-[![CLOMonitor](https://img.shields.io/endpoint?url=https://clomonitor.io/api/projects/cncf/kubearmor/badge)](https://clomonitor.io/projects/cncf/kubearmor)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/kubearmor/kubearmor/badge)](https://securityscorecards.dev/viewer/?uri=github.com/kubearmor/KubeArmor)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubearmor%2FKubeArmor.svg?type=shield&issueType=license)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubearmor%2FKubeArmor?ref=badge_shield)
-[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2Fkubearmor%2FKubeArmor.svg?type=shield&issueType=security)](https://app.fossa.com/projects/git%2Bgithub.com%2Fkubearmor%2FKubeArmor?ref=badge_shield)
-[![Slack](https://img.shields.io/badge/Join%20Our%20Community-Slack-blue)](https://cloud-native.slack.com/archives/C02R319HVL3)
-[![Discussions](https://img.shields.io/badge/Got%20Questions%3F-Chat-Violet)](https://github.com/kubearmor/KubeArmor/discussions)
-[![Docker Downloads](https://img.shields.io/docker/pulls/kubearmor/kubearmor)](https://hub.docker.com/r/kubearmor/kubearmor)
-[![ArtifactHub](https://img.shields.io/badge/ArtifactHub-KubeArmor-blue?logo=artifacthub&labelColor=grey&color=green)](https://artifacthub.io/packages/search?kind=19)
+KuberArmor는 내부로부터 포드를 보호합니다. daemon set으로 실행되며 시스템 레벨에서 컨테이너의 동작을 제한합니다. KubeArmor를 사용하면 pods/container 내의 리소스에 대한 보안 정책을 정의하고 Runtime에 적용할 수 있습니다. 또한 정책 위반을 탐지하고 container ID가 포함된 감사 로그를 생성합니다. 컨테이너 외에도 KubeArmor는 호스트 자체를 보호할 수도 있습니다. 
 
-KubeArmor is a cloud-native runtime security enforcement system that restricts the behavior \(such as process execution, file access, and networking operations\) of pods, containers, and nodes (VMs) at the system level.
+## KubeArmor : Demo Getstarted 
 
-KubeArmor leverages [Linux security modules \(LSMs\)](https://en.wikipedia.org/wiki/Linux_Security_Modules) such as [AppArmor](https://en.wikipedia.org/wiki/AppArmor), [SELinux](https://en.wikipedia.org/wiki/Security-Enhanced_Linux), or [BPF-LSM](https://docs.kernel.org/bpf/prog_lsm.html) to enforce the user-specified policies. KubeArmor generates rich alerts/telemetry events with container/pod/namespace identities by leveraging eBPF.
+우선 kubeArmor를 사용하기 위해서는 kubeArmor를 설치를 해줘야 합니다 :
 
-|  |   |
-|:---|:---|
-| :muscle: **[Harden Infrastructure](getting-started/hardening_guide.md)** <hr>:chains: Protect critical paths such as cert bundles <br>:clipboard: MITRE, STIGs, CIS based rules <br>:left_luggage: Restrict access to raw DB table | :ring: **[Least Permissive Access](getting-started/least_permissive_access.md)** <hr>:traffic_light: Process Whitelisting <br>:traffic_light: Network Whitelisting <br>:control_knobs: Control access to sensitive assets |
-| :telescope: **[Application Behavior](getting-started/workload_visibility.md)** <hr>:dna: Process execs, File System accesses <br>:compass: Service binds, Ingress, Egress connections <br>:microscope: Sensitive system call profiling | :snowflake: **[Deployment Models](getting-started/deployment_models.md)** <hr>:wheel_of_dharma: Kubernetes Deployment<br>:whale2: Containerized Deployment<br>:computer: VM/Bare-Metal Deployment |
+```sh
+curl -sfL http://get.kubearmor.io/ | sudo sh -s -- -b /usr/local/bin
+karmor install
+```
 
-## Architecture Overview
+우선 Deployment를 작성을 해주고, `k apply -f deployment.yaml`을 수행 해줍니다 :
 
-![KubeArmor High Level Design](.gitbook/assets/kubearmor_overview.png)
+```sh
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: green-app
+  namespace: green
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: green
+  template:
+    metadata:
+      labels:
+        app: green
+    spec:
+      containers:
+        - name: green-container
+          image: busybox
+          command:
+            - "sh"
+            - "-c"
+            - "echo 'Starting /bin/sleep'; /bin/sleep 3600"
+          resources:
+            limits:
+              memory: "64Mi"
+              cpu: "250m"
+```
 
-## Documentation :notebook:
+정상적으로 설치가 되었다면 , 아래와 같이 KubeArmor의 정책을 작성을 해줍니다 :
 
-* :point_right: [Getting Started](getting-started/deployment_guide.md)
-* :dart: [Use Cases](getting-started/use-cases/hardening.md)
-* :heavy_check_mark: [KubeArmor Support Matrix](getting-started/support_matrix.md)
-* :chess_pawn: [How is KubeArmor different?](getting-started/differentiation.md)
-* :scroll: Security Policy for Pods/Containers [[Spec](getting-started/security_policy_specification.md)] [[Examples](getting-started/security_policy_examples.md)]
-* :scroll: Cluster level security Policy for Pods/Containers [[Spec](getting-started/cluster_security_policy_specification.md)] [[Examples](getting-started/cluster_security_policy_examples.md)]
-* :scroll: Security Policy for Hosts/Nodes [[Spec](getting-started/host_security_policy_specification.md)] [[Examples](getting-started/host_security_policy_examples.md)]<br>
-... [detailed documentation](https://docs.kubearmor.io/kubearmor/)
+```sh
+apiVersion: security.kubearmor.com/v1
+kind: KubeArmorPolicy
+metadata:
+  name: ksp-group-1-proc-path-block
+  namespace: green
+spec:
+  severity: 5
+  message: "block /bin/sleep"
+  selector:
+    matchLabels:
+      app: green
+  process:
+    matchPaths:
+    - path: /bin/sleep
+  action:
+    Block
+```
 
-### Contributors :busts_in_silhouette:
-
-* :blue_book: [Contribution Guide](contribution/contribution_guide.md)
-* :technologist: [Development Guide](contribution/development_guide.md), [Testing Guide](contribution/testing_guide.md)
-* :raised_hand: [Join KubeArmor Slack](https://cloud-native.slack.com/archives/C02R319HVL3)
-* :question: [FAQs](getting-started/FAQ.md)
-
-### Biweekly Meeting
-
-- :speaking_head: [Zoom Link](http://zoom.kubearmor.io)
-- :page_facing_up: Minutes: [Document](https://docs.google.com/document/d/1IqIIG9Vz-PYpbUwrH0u99KYEM1mtnYe6BHrson4NqEs/edit)
-- :calendar: Calendar invite: [Google Calendar](http://www.google.com/calendar/event?action=TEMPLATE&dates=20220210T150000Z%2F20220210T153000Z&text=KubeArmor%20Community%20Call&location=&details=%3Ca%20href%3D%22https%3A%2F%2Fdocs.google.com%2Fdocument%2Fd%2F1IqIIG9Vz-PYpbUwrH0u99KYEM1mtnYe6BHrson4NqEs%2Fedit%22%3EMinutes%20of%20Meeting%3C%2Fa%3E%0A%0A%3Ca%20href%3D%22%20http%3A%2F%2Fzoom.kubearmor.io%22%3EZoom%20Link%3C%2Fa%3E&recur=RRULE:FREQ=WEEKLY;INTERVAL=2;BYDAY=TH&ctz=Asia/Calcutta), [ICS file](getting-started/resources/KubeArmorMeetup.ics)
-
-## Notice/Credits :handshake:
-
-- KubeArmor uses [Tracee](https://github.com/aquasecurity/tracee/)'s system call utility functions.
-
-## CNCF
-
-KubeArmor is [Sandbox Project](https://www.cncf.io/projects/kubearmor/) of the Cloud Native Computing Foundation.
-![CNCF SandBox Project](.gitbook/assets/cncf-sandbox.png)
-
-## ROADMAP
-
-KubeArmor roadmap is tracked via [KubeArmor Projects](https://github.com/orgs/kubearmor/projects?query=is%3Aopen)
+위에 정책을 보면 matchLabels을 이용하여, 이 Labels이 match가 되는 Object에게 정책을 적용합니다. `severity:` 보안 위험 수준을 표현 합니다.  
+`process` ,  `syscalls` , `file` , `network` 이렇게 종류가 있습니다. 참고 -> https://docs.kubearmor.io/kubearmor/documentation/security_policy_examples 
+여기서 적용한 process는 sleep 명령어를 수행하게 되면 프로세스로 sleep이 올라가게 됩니다. 이때 kubearmor /bin/sleep 프로세스를 감지하고 actions을 통해서 차단을 하게 됩니다.
