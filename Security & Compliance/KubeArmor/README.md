@@ -1,6 +1,6 @@
 # KubeArmor: Runtime Security
 by gmstcl : sgh | on 3 Feb 2025 | in Amazon Elastic Kubernetes Service , CNCF KubeArmor
-
+  
 KuberArmor는 내부로부터 포드를 보호합니다. daemon set으로 실행되며 시스템 레벨에서 컨테이너의 동작을 제한합니다. KubeArmor를 사용하면 pods/container 내의 리소스에 대한 보안 정책을 정의하고 Runtime에 적용할 수 있습니다. 또한 정책 위반을 탐지하고 container ID가 포함된 감사 로그를 생성합니다. 컨테이너 외에도 KubeArmor는 호스트 자체를 보호할 수도 있습니다. 
 
 ## KubeArmor : Demo Getstarted 
