@@ -65,3 +65,15 @@ spec:
 ```
 
 위에 정책을 보면 matchLabels을 이용하여, 이 Labels이 match가 되는 Object에게 정책을 적용합니다. `severity:` 보안 위험 수준을 표현 합니다. `process` ,  `syscalls` , `file` , `network` 이렇게 종류가 있습니다. 참고 -> https://docs.kubearmor.io/kubearmor/documentation/security_policy_examples 여기서 적용한 process는 sleep 명령어를 수행하게 되면 프로세스로 sleep이 올라가게 됩니다. 이때 kubearmor /bin/sleep 프로세스를 감지하고 actions을 통해서 차단을 하게 됩니다.
+
+karmor logs 명령어로 통해서 감사 로그를 확인할 수 있습니다. 
+
+```sh 
+karmor logs
+```
+
+recommendable 한 policy를 생성하기위해 policy-template을 업데이트 하고 해당 ns에서 사용되는 이미지를 pull 해옵니다. 
+
+```sh
+karmor recommend -n NAMESPACE
+```
