@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: multiple-app
+  namespace: argocd
+spec:
+ project: default
+ destination:
+   server: https://kubernetes.default.svc
+   namespace: default
+ sources:
+  - repoURL: https://prometheus-community.github.io/helm-charts
+    targetRevision: 27.3.1
+    chart: prometheus
+  - repoURL: https://github.com/gmstcl/argocd-multi-apps.git
+    targetRevision: HEAD
+    path: manifest
+ syncPolicy:
+   automated:
+     prune: true
+   syncOptions:
+   - createNamespace=true
