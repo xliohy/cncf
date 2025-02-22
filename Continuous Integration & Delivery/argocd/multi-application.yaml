@@ -12,11 +12,18 @@ spec:
   - repoURL: https://prometheus-community.github.io/helm-charts
     targetRevision: 27.3.1
     chart: prometheus
+    helm:
+      parameters:
+        - name: server.persistentVolume.existingClaim
+          value: "demo-pvc"
   - repoURL: https://github.com/gmstcl/argocd-multi-apps.git
     targetRevision: HEAD
     path: manifest
- syncPolicy:
-   automated:
-     prune: true
-   syncOptions:
-   - createNamespace=true
+
+syncPolicy:
+  automated:
+    prune: false
+    selfHeal: true
+syncOptions:
+  - createNamespace=true
+  - ServerSideApply=true
