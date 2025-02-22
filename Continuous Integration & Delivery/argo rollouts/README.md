@@ -5,7 +5,7 @@ Argo Rollouts (optionally) integrates with ingress controllers and service meshe
 
 Here is a demonstration video (click to watch on Youtube):
 
-<img src="https://www.youtube.com/watch?v=hIL0E2gLkf8" alt="argorollouts.com">
+<img src="https://img.youtube.com/vi/hIL0E2gLkf8/0.jpg" alt="argorollouts.com">
 
 Argo Rollouts Demo
 
