@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: ingress-alb-active
-  namespace: argo-rollouts
+  namespace: dev
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/group.order: '10'
@@ -26,7 +26,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   name: ingress-alb-preview
-  namespace: argo-rollouts
+  namespace: dev
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/group.order: '20'

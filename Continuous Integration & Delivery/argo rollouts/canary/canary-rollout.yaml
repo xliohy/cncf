@@ -1,0 +1,73 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: rollouts-demo
+  namespace: dev
+spec:
+  replicas: 4
+  strategy:
+    canary:
+      canaryService: rollouts-demo-canary  # Canary 트래픽을 처리하는 서비스
+      stableService: rollouts-demo-stable  # 안정적인 트래픽을 처리하는 서비스
+      trafficRouting:
+        alb:
+          ingress: rollouts-demo-ingress  # ALB Ingress 리소스 설정
+          servicePort: 80  # ALB가 라우팅하는 포트
+          rootService: rollouts-demo-root  # 최상위 트래픽을 담당하는 서비스
+      steps:
+      - setWeight: 10  # 초기 Canary 트래픽 비율을 10%로 설정
+      - pause: {duration: 60s}  # 60초 동안 Canary 트래픽을 유지하며 모니터링
+      - setWeight: 25  # Canary 트래픽을 25%로 증가
+      - pause: {duration: 120s}  # 120초 동안 Canary 트래픽을 유지
+      - analysis:  # Canary 단계에서 자동 분석 수행 (성공률 기반 체크)
+          templates:
+          - templateName: success-rate-check  # 성공률 기반 검증을 수행하는 템플릿
+          startingStep: 2  # 2번째 스텝부터 적용
+      - setWeight: 50  # Canary 트래픽을 50%로 증가
+      - pause: {duration: 180s}  # 180초 동안 Canary 트래픽을 유지
+      - setWeight: 75  # Canary 트래픽을 75%로 증가
+      - pause: {duration: 240s}  # 240초 동안 Canary 트래픽을 유지
+      - setWeight: 100  # 최종적으로 Canary 트래픽을 100%로 설정 (완전 롤아웃)
+      - analysis:  # 최종 Canary 트래픽 증가 후 추가적인 분석 수행 (지연 시간 기반 체크)
+          templates:
+          - templateName: latency-check  # 응답 지연 시간을 기준으로 검증
+          startingStep: 6  # 6번째 스텝에서 적용
+      trafficRouting:
+        alb:
+          ingress: rollouts-demo-ingress  # ALB Ingress 설정 유지
+          servicePort: 80  # 서비스 포트 유지
+          rootService: rollouts-demo-root  # Root 서비스 유지
+      maxSurge: 1  # 추가적으로 생성될 수 있는 최대 Pod 개수 (Rolling Update 대비 향상된 제어 가능)
+      maxUnavailable: 0  # 배포 중 사용할 수 없는 최대 Pod 개수 (0으로 설정하여 가용성 유지)
+      abortScaleDownDelaySeconds: 30  # 배포 중단 시 안정적인 롤백을 위해 일정 시간 대기
+      previewReplicaCount: 1  # Canary 배포를 미리 볼 수 있도록 1개의 Preview Replica 유지
+      analysis:
+        templates:
+        - templateName: error-rate-check  # 특정 오류율 기반 Canary 배포 평가
+        startingStep: 1  # 1번째 스텝부터 적용
+  revisionHistoryLimit: 5  # 기존 2에서 5로 증가하여 롤백 가능 버전 수를 늘림
+  progressDeadlineSeconds: 600  # 롤아웃이 완료되지 않으면 실패로 간주하는 시간 (기본값 600초)
+  minReadySeconds: 30  # 새롭게 생성된 Pod이 최소 30초 동안 정상 상태 유지 후 준비 상태로 간주
+  selector:
+    matchLabels:
+      app: rollouts-demo  # 롤아웃 대상 애플리케이션 라벨
+  template:
+    metadata:
+      labels:
+        app: rollouts-demo  # 롤아웃 대상 애플리케이션 라벨
+    spec:
+      containers:
+      - name: rollouts-demo
+        image: argoproj/rollouts-demo:yellow  # 배포될 컨테이너 이미지
+        imagePullPolicy: Always  # 항상 최신 이미지를 가져오도록 설정
+        ports:
+        - name: http
+          containerPort: 8080  # 컨테이너 내에서 서비스할 포트
+          protocol: TCP  # TCP 프로토콜 사용
+        resources:
+          requests:
+            memory: 32Mi  # 최소 요구 메모리
+            cpu: 5m  # 최소 요구 CPU
+          limits:
+            memory: 64Mi  # 컨테이너 메모리 사용 상한 추가
+            cpu: 50m  # 컨테이너 CPU 사용 상한 추가
