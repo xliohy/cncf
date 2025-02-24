@@ -3,7 +3,7 @@
 # ============================================================
 $ kubectl create ns argo-rollouts
 $ helm repo add argo https://argoproj.github.io/argo-helm
-$ helm install argo-rollouts argo/argo-rollouts --set dashboard.enabled=true --set dashboard.image.tag=v1.7.2
+$ helm install argo-rollouts argo/argo-rollouts -n argo-rollouts --set dashboard.enabled=true --set dashboard.image.tag=v1.7.2
 
 # ------------> https://quay.io/repository/argoproj/kubectl-argo-rollouts?tab=tags&tag=latest 
 # bashboard Tags를 수정해야 합니다. latest 버전은 현재 접근이 불가한 상태로 v1.7.2 버전을 사용했습니다. 
