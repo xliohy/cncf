@@ -19,4 +19,4 @@ $ argocd version --client
 # ============================================================
 $ kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d; echo
 $ sudo argocd login ARGOCD_SERVER
-$ argocd account update-password
+$ sudo argocd account update-password
