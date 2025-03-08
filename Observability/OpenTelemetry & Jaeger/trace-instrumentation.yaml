@@ -1,0 +1,33 @@
+apiVersion: opentelemetry.io/v1alpha1
+kind: Instrumentation
+metadata:
+  name: trace-instrumentation
+spec:
+  exporter:
+    endpoint: http://otel-collector-trace-collector.otel.svc.cluster.local:4317  # 기본적으로 gRPC 프로토콜을 사용하여 OpenTelemetry Collector로 데이터 전송
+
+  # 트레이스 데이터를 다른 서비스로 전파할 때 사용하는 propagators 설정
+  propagators:
+    - tracecontext   # W3C Trace Context: 트레이스 컨텍스트 정보를 전파하는 표준 프로토콜
+    - baggage        # W3C Baggage: 트레이스 관련 추가 정보를 전파하는 표준 프로토콜
+    - jaeger         # Jaeger: Jaeger 프로토콜을 사용하여 트레이스를 전파
+    # 거의 tracecontext , baggage , jaeger를 사용용
+
+  # 샘플러는 트레이스를 얼마나 자주 수집할지를 설정
+  # 'parentbased_traceidratio'는 부모 트랜잭션에 기반하여 샘플링 비율을 결정
+  # 'argument'는 샘플링 비율을 나타내며, '1'은 100% 샘플링을 의미
+  sampler:
+    type: parentbased_traceidratio  # 부모 트랜잭션을 기준으로 샘플링 비율을 설정하는 샘플러 타입
+    argument: "1"  # 샘플링 비율: 1 = 100% 샘플링
+
+  # Python과 Go 언어의 OpenTelemetry Collector로 데이터를 전송하는 엔드포인트를 HTTP 프로토콜 엔드포인트로 설정
+  python:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector-trace-collector.otel.svc.cluster.local:4318  # Python의 OpenTelemetry Collector 엔드포인트
+
+  go:
+    env:
+      - name: OTEL_EXPORTER_OTLP_ENDPOINT
+        value: http://otel-collector-trace-collector.otel.svc.cluster.local:4318  # Go의 OpenTelemetry Collector 엔드포인트
+  # opentelemetry-operator-controller-manager deployment에 args: - --enable-go-instrumentation=true 추가 (Golang 사용 시)

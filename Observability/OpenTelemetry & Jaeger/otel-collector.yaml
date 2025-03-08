@@ -1,0 +1,40 @@
+apiVersion: opentelemetry.io/v1beta1
+kind: OpenTelemetryCollector
+metadata:
+  name: otel-collector-trace
+  namespace: otel
+spec:
+  mode: deployment # deployment(default) , daemonset , sidecar , staeful
+  image: ghcr.io/open-telemetry/opentelemetry-collector-releases/opentelemetry-collector
+
+  config:
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317 # grpc endpoint 
+          http:
+            endpoint: 0.0.0.0:4318 # http endpoint 
+
+    processors:
+      memory_limiter:
+        check_interval: 1s     
+        limit_percentage: 75     
+        spike_limit_percentage: 15 
+      batch:
+        send_batch_size: 10000  
+        timeout: 10s             
+
+    exporters:
+      debug: {}
+      otlp/jaeger:
+        endpoint: jaeger-inmemory-instance-collector.jaeger.svc.cluster.local:4317 # jaeger Collector 주소
+        tls:
+          insecure: true # TLS 인증서 무시시
+
+    service:
+      pipelines: # receivers -> processors -> exporters 순서대로 실행
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch]
+          exporters: [otlp/jaeger, debug]

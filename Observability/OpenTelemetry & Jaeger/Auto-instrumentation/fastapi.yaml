@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dev
+  labels:
+    app: dev
+spec:
+  selector:
+    matchLabels:
+      app: dev
+  template:
+    metadata:
+      annotations:
+        instrumentation.opentelemetry.io/inject-python: "trace-instrumentation" # deployment가 아니라, pods에게 annotations 추가해야함.
+      labels:
+        app: dev
+    spec:
+      serviceAccountName: dev
+      terminationGracePeriodSeconds: 5
+######################################## Auto-instrumentation ######################################
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsNonRoot: true
+        runAsUser: 1000
+      containers:
+      - name: server
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          privileged: false
+          readOnlyRootFilesystem: true
+      # securityContext를 사용하는 이유
+        # -> Auto-instrumentation이 이 애플리케이션을 읽어와야 하기 때문에, securityContext를 통해서 Root 권한을 줘야 합니다.
+######################################## Auto-instrumentation ###################################### 
+
+        image: rutush10/otel-autoinstrumentation-fastapi-simple-app:0.0.4
+        ports:
+        - containerPort: 8000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dev
+  labels:
+    app: dev
+spec:
+  type: ClusterIP
+  selector:
+    app: dev
+  ports:
+  - name: tcp
+    port: 8000
+    targetPort: 8000
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: dev
+---
+
+# rutush10/otel-autoinstrumentation-fastapi-simple-app:0.0.4
