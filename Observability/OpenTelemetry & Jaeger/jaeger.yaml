@@ -1,41 +1,41 @@
-apiVersion: opentelemetry.io/v1beta1
-kind: OpenTelemetryCollector
+apiVersion: opentelemetry.io/v1beta1  # OpenTelemetry Collector API 버전 지정
+kind: OpenTelemetryCollector  # OpenTelemetryCollector 리소스 종류
 metadata:
-  name: jaeger-inmemory-instance
+  name: jaeger-inmemory-instance  # OpenTelemetry Collector의 이름 지정
 spec:
-  image: jaegertracing/jaeger:latest
+  image: jaegertracing/jaeger:latest  # Jaeger 최신 버전 컨테이너 이미지 사용
   ports:
-  - name: jaeger
-    port: 16686
+  - name: jaeger  # Jaeger UI 및 트레이스 조회를 위한 포트
+    port: 16686  # 기본 Jaeger UI 포트
   config:
     service:
-      extensions: [jaeger_storage, jaeger_query]
+      extensions: [jaeger_storage, jaeger_query]  # Jaeger 저장소 및 쿼리 기능 확장 -> health_check , pprof(golang 애플리케이션만 지원 CPU , Memory)
       pipelines:
         traces:
-          receivers: [otlp]    
-          exporters: [jaeger_storage_exporter]
+          receivers: [otlp]  # OpenTelemetry Protocol(OTLP) 데이터를 수신
+          exporters: [jaeger_storage_exporter]  # 트레이스를 Jaeger 저장소로 내보냄
     extensions:
       jaeger_query:
         storage:
-          traces: memstore
+          traces: memstore  # Jaeger 트레이스를 메모리 저장소(memstore)에 저장
       jaeger_storage:
         backends:
           memstore:
             memory:
-              max_traces: 100000 # 메모리에 저장된 트레이스 양에는 제한이 없지만 다음을 통해 제한을 설정
+              max_traces: 100000  # 메모리에 저장할 최대 트레이스 개수 (100,000개)
         # metric_backends:
         #   some_metrics_storage:
         #     prometheus:
-        #       endpoint: http://prometheus.default.svc.cluster.local:9090
-        #       normalize_calls: true
-        #       normalize_duration: true
+        #       endpoint: http://prometheus.default.svc.cluster.local:9090  # Prometheus 메트릭 저장소 설정 (비활성화 상태)
+        #       normalize_calls: true  # 호출 수 메트릭 정규화
+        #       normalize_duration: true  # 지속 시간 메트릭 정규화
     receivers:
       otlp:
         protocols:
           grpc:
-            endpoint: 0.0.0.0:4317 # 다른 port 사용 가능 
+            endpoint: 0.0.0.0:4317  # gRPC 프로토콜을 통한 OTLP 수신 (필요시 포트 변경 가능)
           http:
-            endpoint: 0.0.0.0:4318 # 다른 port 사용 가능 
+            endpoint: 0.0.0.0:4318  # HTTP 프로토콜을 통한 OTLP 수신 (필요시 포트 변경 가능)
     exporters:
       jaeger_storage_exporter:
-        trace_storage: memstore
+        trace_storage: memstore  # 트레이스 데이터를 메모리 저장소(memstore)로 내보냄
