@@ -1,0 +1,12 @@
+apiVersion: argoproj.io/v1alpha1   # Argo Workflows CRD의 apiVersion
+kind: Workflow                     # 리소스 타입: Workflow (Argo Workflows에서 워크플로우 정의)
+metadata:
+  generateName: hello-world-       # 생성될 워크플로우 이름의 접두어. 실제 이름은 고유하게 생성됨 (예: hello-world-xyz123)
+spec:
+  entrypoint: whalesay             # 워크플로우의 시작점을 정의. 여기서는 'whalesay' 템플릿을 시작점으로 지정.
+  templates:                       # 워크플로우에서 사용할 템플릿 목록
+  - name: whalesay                 # 템플릿 이름: whalesay
+    container:                     
+      image: docker/whalesay        # 컨테이너 이미지. 여기서는 'docker/whalesay' 이미지를 사용
+      command: [cowsay]            # 컨테이너에서 실행할 명령어 여기서는 'cowsay' 명령어를 실행
+      args: ["hello world"]        # 여기서는 'hello world'를 전달
